@@ -1,0 +1,4 @@
+*.dmp
+/new_taxdump.tar.gz
+/.venv/
+/__pycache__/
