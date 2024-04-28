@@ -24,6 +24,8 @@ function only_magyar()
     return true;
 }
 
+function draw_ui
+
 function shuffle(array) {
   let currentIndex = array.length;
 
@@ -40,6 +42,13 @@ function shuffle(array) {
   }
 }
 
+function create_button(node, click_handler){
+    let button = $('<button/>');
+    button.text(build_name(node));
+    button.click(click_handler);
+    return button;
+}
+
 function draw_buttons(index){
     if(puzzle["ancestors"].length <= index)
     {
@@ -51,41 +60,40 @@ function draw_buttons(index){
 
     var ancestor = puzzle["ancestors"][index];
     if(only_magyar() && ancestor["alt_names"][1] == "") return draw_buttons(index + 1);
-    
+
     var others = puzzle["other_choices"][ancestor["tax_id"]];
     if(only_magyar()) others = others.filter((other) => other["alt_names"][1] != "");
     var win_button = $('<button/>');
     win_button.text(build_name(ancestor));
-    win_button.click(function () { draw_buttons(index + 1); });
-    lose_buttons = [];
+    win_button.click();
+    let win_button = create_button(ancestor, () => draw_buttons(index + 1));
+
+    let buttons = [win_button];
+
     if(others.length > 5)
     {
 	others = others.slice(0, 5);
     }
 
-    for(var i = 0; i < others.length; i++)
+    for(const other of others)
     {
-	var other = others[i];
-	var lose_button = $('<button/>');
-	lose_button.text(build_name(other))
-	lose_button.click(
-	    function(e)
+	let lose_button = create_button(other, function(e)
 	    {
 		$(event.target).attr('disabled', 'disabled');
 		puzzle["fails"]++;
 		$("#fails").text("Errors: " + puzzle["fails"]);
 	    });
-	lose_buttons.push(lose_button);
+	buttons.push(lose_button);
     }
-    var buttons = lose_buttons.concat([win_button]);
+
     shuffle(buttons);
+
     var box = $("#possibles");
     box.empty();
     for(var i = 0; i<buttons.length; i++)
     {
 	box.append(buttons[i]);
     }
-
 }
 
 function new_puzzle(){

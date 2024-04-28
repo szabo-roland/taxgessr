@@ -1,6 +1,7 @@
 import sqlite3
 import json
 import requests
+import random
 
 class Node:
     def __init__(self, db, tax_id):
@@ -44,6 +45,15 @@ class Node:
         return cls(db.get_random_guessable_id(), db)
 
 class Data:
+    instance = None
+    @classmethod
+    def get_instance(cls):
+        if cls.instance:
+            return cls.instance
+
+        cls.instance = cls()
+        return cls.instance
+
     @staticmethod
     def connect():
         con = sqlite3.connect('data.db')
@@ -77,11 +87,11 @@ class Data:
         return res.fetchall()
 
     def get_translation(self, tax_id):
-        res = self.query_one(f"select * from translations where tax_id={tax_id}")
+        res = self.query_one(f"select en, hu from translations where tax_id={tax_id}")
         if res:
-            return [res["en"], res["hu"]]
+            return {"en": res["en"], "hu": res["hu"]}
         else:
-            return ["", ""]
+            return {"en": "", "hu": ""}
 
     def get_name(self, tax_id):
         res = self.query_one(f"select name from names where class='scientific name' and tax_id={tax_id}")
@@ -108,7 +118,7 @@ class Data:
 
     def get_ancestors(self, tax_id):
         # print(f"get_ancestors({tax_id})")
-        result = []
+        result = [tax_id]
         while tax_id := self.get_parent(tax_id):
             result.append(tax_id)
 
@@ -166,6 +176,91 @@ class Puzzle:
 
     def to_json(self):
         return json.dumps(self, default=lambda o: o._to_dict())
+
+
+def get_name_data(db, tax_id, hu_only):
+    res = {
+        "tax_id": tax_id,
+        "sci": db.get_name(tax_id),
+        **db.get_translation(tax_id)
+    }
+
+    if hu_only:
+        res["label"] = f"{res['hu']} / {res['sci']}"
+    else:
+        res["label"] = res['sci']
+        if res['en'] != '' and res['en'] != res['sci']:
+            res["label"] += f" / {res['en']}"
+
+        if res['hu'] != '' and res['hu'] != res['sci'] and res['hu'] != res['en']:
+            res["label"] += f" / {res['hu']}"
+
+    return res
+
+def has_hun_name(name):
+    return name["hu"] != "" and name["hu"] != name["sci"] and name["hu"] != name["en"]
+
+def get_puzzle_data(hu_only, rand, tax_id, errors, progress):
+    db = Data.get_instance()
+
+    if rand:
+        tax_id = db.get_random_guessable_id()
+
+    subject = get_name_data(db, tax_id, hu_only)
+    image_url = db.get_image_url(tax_id)
+    ancestors = db.get_ancestors(tax_id)[::-1][1:]
+    if progress >= len(ancestors):
+        return {
+            "ancestors": [ancestor for ancestor in [get_name_data(db, ancestor, hu_only) for ancestor in ancestors] if not hu_only or has_hun_name(ancestor)],
+            "hu_only": hu_only,
+            "image_url": image_url,
+            "subject": subject,
+            "choices": [],
+            "errors": errors,
+            "progress": progress,
+            "won": True
+        }
+
+    ancestor = get_name_data(db, ancestors[progress], hu_only)
+    if hu_only:
+        if not has_hun_name(ancestor):
+            return get_puzzle_data(
+                hu_only=hu_only,
+                rand=False,
+                tax_id=tax_id,
+                errors=errors,
+                progress=progress+1
+            )
+
+    siblings = [sibling for sibling in [get_name_data(db, sibling, hu_only) for sibling in db.get_siblings(ancestor["tax_id"])] if not _is_bullshit(sibling["sci"])]
+    if hu_only:
+        siblings = [sibling for sibling in siblings if has_hun_name(sibling)]
+
+    if len(siblings) < 1:
+        return get_puzzle_data(
+            hu_only=hu_only,
+            rand=False,
+            tax_id=tax_id,
+            errors=errors,
+            progress=progress+1
+        )
+
+    choices = [{"ans": False, **sibling} for sibling in siblings]
+    if len(choices) > 5:
+        choices = choices[:5]
+
+    choices.append({"ans": True, **ancestor})
+    random.shuffle(choices)
+
+    return {
+        "hu_only": hu_only,
+        "image_url": image_url,
+        "subject": subject,
+        "choices": choices,
+        "errors": errors,
+        "progress": progress,
+        "won": False,
+    }
 
 def main():
     import sys

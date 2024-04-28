@@ -1,0 +1,40 @@
+<article id="game">
+  <header>
+    <div class="grid">
+      <div><img src="{{ image_url }}" style="max-height: 40vh"></div>
+    </div>
+  </header>
+  {% if not won %}
+    <span id="errors_display">{% if errors > 0 %}Errors: {{ errors }}{% endif %}</span>
+    <form hx-get="/get_puzzle" hx-swap="outerHTML" hx-target="#game">
+      <fieldset>
+	<input type="hidden" name="progress" value="{{ progress + 1}}" />
+	<input type="hidden" name="errors" id="errors" value="{{errors}}" />
+	<input type="hidden" name="tax_id" value="{{subject['tax_id']}}">
+	{% if hu_only %}
+	  <input type="hidden" name="hu_only" value="on" />
+	{% endif %}
+	{% for choice in choices %}
+	  <input
+	    id="choice_{{ loop.index }}"
+	    type="{{ 'submit' if choice['ans'] else 'button'}}"
+	    value="{{ choice['label'] }}"
+	    {% if not choice['ans'] %}
+	      onclick="wrong_choice('choice_{{loop.index}}')"
+	    {% endif %}
+	    />
+	  {% endfor %}
+      </fieldset>
+    </form>
+  {% else %}
+    <h1>You won! Errors: {{ errors }}</h1>
+    <h2>Lineage</h2>
+    <ul>
+      {% for ancestor in ancestors %}
+	<li>{{ ancestor['label'] }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+
+</article>

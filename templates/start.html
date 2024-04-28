@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+      />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2" crossorigin="anonymous"></script>
+
+    <title>Lineage guessr</title>
+  </head>
+  <body>
+    <header class="container">
+      <h1>Lineage guessr</h1>
+    </header>
+    <main class="container">
+      <form hx-get="/get_puzzle" hx-swap="outerHTML">
+	<fieldset>
+	  <legend>Preferences:</legend>
+	  <label>
+	    <input type="checkbox" name="hu_only" checked />
+	    Hungarian-only
+	  </label>
+	  <hr/>
+	  <label>
+	    <input type="checkbox" id="random" name="random" />
+	    Random
+	  </label>
+	  <label id="tax_id" style="display:none">
+	    tax_id
+	    <input type="input" name="tax_id"/>
+	  </label>
+	  <input type="hidden" value="0" name="errors">
+	  <input type="hidden" value="0" name="progress">
+	</fieldset>
+
+	<input
+	  type="submit"
+	  value="New game"
+	  />
+      </form>
+    </main>
+    <script>
+      let $random = $("#random");
+      let $tax_id = $("#tax_id");
+
+      $random.change(function(){
+	  if(this.checked)
+	  {
+	      $tax_id.hide();
+	  }
+	  else
+	  {
+	      $tax_id.show();
+	  }
+      });
+      function wrong_choice(id)
+      {
+	  $("#" + id).prop( "disabled", true );;
+	  let errors = $("#errors");
+	  let errors_display = $("#errors_display");
+	  let error_val = parseInt(errors.val()) + 1;
+	  errors.val(error_val);
+
+	  errors_display.html('Errors: ' + error_val);
+      }
+    </script>
+  </body>
+</html>

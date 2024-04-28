@@ -1,4 +1,8 @@
+*.db
 *.dmp
-/new_taxdump.tar.gz
+*.py[cod]
+.web
 /.venv/
 /__pycache__/
+/new_taxdump.tar.gz
+__pycache__/
