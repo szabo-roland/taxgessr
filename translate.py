@@ -1,18 +1,19 @@
 from game import Data
 import requests
 import json
+from get_subtree import get_subtree_for
 
 def translate_name(name):
     result = {"hu": "", "en": ""}
     r = requests.get(f"https://en.wikipedia.org/w/api.php?action=parse&format=json&redirects=1&page={name}&formatversion=2")
     j = json.loads(r.text)
-    
+
     if "parse" in j and "title" in j["parse"]:
         result["en"] = j["parse"]["title"]
 
     r = requests.get(f"https://hu.wikipedia.org/w/api.php?action=parse&format=json&redirects=1&page={name}&formatversion=2")
     j = json.loads(r.text)
-    
+
     if "parse" in j and "title" in j["parse"]:
         result["hu"] = j["parse"]["title"]
 
@@ -23,9 +24,9 @@ def main():
     g = db.get_all_reachable()
     counter = 0
     m_counter = 0
-    while e:= g.fetchone():
+    subtree = get_subtree_for(33208)
+    for tax_id in subtree:
         m_counter += 1
-        tax_id = e["tax_id"]
         if m_counter % 100 == 0:
             print(f"progress {m_counter}")
         if not db.get_translation(tax_id):

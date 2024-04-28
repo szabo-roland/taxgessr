@@ -2,29 +2,13 @@ import sqlite3
 import json
 import requests
 
-def translate_name(name):
-    result = []
-    r = requests.get(f"https://en.wikipedia.org/w/api.php?action=parse&format=json&redirects=1&page={name}&formatversion=2")
-    j = json.loads(r.text)
-    
-    if "parse" in j and "title" in j["parse"]:
-        result.append(j["parse"]["title"])
-
-    r = requests.get(f"https://hu.wikipedia.org/w/api.php?action=parse&format=json&redirects=1&page={name}&formatversion=2")
-    j = json.loads(r.text)
-    
-    if "parse" in j and "title" in j["parse"]:
-        result.append(j["parse"]["title"])
-
-    return result
-
 class Node:
     def __init__(self, db, tax_id):
         self.db = db
         self.tax_id = tax_id
         self.name = db.get_name(tax_id)
-        self.alt_names = translate_name(self.name)
-        
+        self.alt_names = db.get_translation(tax_id)
+
     def _to_dict(self):
         return {
             "tax_id": self.tax_id,
@@ -75,7 +59,7 @@ class Data:
         c = self.con.cursor()
         res = c.execute("select tax_id from reachable")
         return res
-    
+
     def __init__(self):
         self.con = self.connect()
 
@@ -94,8 +78,11 @@ class Data:
 
     def get_translation(self, tax_id):
         res = self.query_one(f"select * from translations where tax_id={tax_id}")
-        return res
-        
+        if res:
+            return [res["en"], res["hu"]]
+        else:
+            return ["", ""]
+
     def get_name(self, tax_id):
         res = self.query_one(f"select name from names where class='scientific name' and tax_id={tax_id}")
         return res["name"]
