@@ -4,17 +4,6 @@ import json
 
 app = Flask(__name__)
 
-@app.route("/random")
-def random_puzzle():
-    p = Puzzle.gen_random()
-    result = p.to_json()
-    return Response(result, mimetype='application/json')
-
-@app.route("/<path>")
-def main(path):
-    response = make_response(send_from_directory(".", path))
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
 
 @app.route("/")
 def index():
