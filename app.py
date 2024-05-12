@@ -1,8 +1,14 @@
+from werkzeug.middleware.proxy_fix import ProxyFix
+
+
 from flask import Flask, send_from_directory, Response, make_response, render_template, request
 from game import Puzzle, get_puzzle_data
 import json
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(
+    app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
+)
 
 
 @app.route("/")
