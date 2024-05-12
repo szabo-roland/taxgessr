@@ -131,7 +131,9 @@ class Data:
 
         return res["image_url"]
 
-    def get_random_guessable_id(self):
+    def get_random_guessable_id(self, hu_only=False):
+        if hu_only:
+            return int(self.query_one("select tax_id from images where tax_id in (select tax_id from translations where hu != '') ORDER BY RANDOM() LIMIT 1")["tax_id"])
         return int(self.query_one("select tax_id from images ORDER BY RANDOM() LIMIT 1")["tax_id"])
 
 
@@ -204,7 +206,7 @@ def get_puzzle_data(hu_only, rand, tax_id, errors, progress):
     db = Data.get_instance()
 
     if rand:
-        tax_id = db.get_random_guessable_id()
+        tax_id = db.get_random_guessable_id(hu_only)
 
     subject = get_name_data(db, tax_id, hu_only)
     image_url = db.get_image_url(tax_id)
