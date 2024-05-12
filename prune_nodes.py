@@ -2,7 +2,9 @@ from game import Data
 
 def main():
     db = Data()
-    g = db.get_all_guessable()
+    cur = db.con.cursor()
+    g = cur.execute("select tax_id from images where tax_id not in (select tax_id from reachable)")
+
     counter = 0
     m_counter = 0
     while e:= g.fetchone():
@@ -18,7 +20,7 @@ def main():
 
         c = db.con.cursor()
         count_before = c.execute("select count(*) as count from reachable").fetchone()["count"]
-        
+
 
         for tax_id in ids:
             c = db.con.cursor()
