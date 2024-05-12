@@ -56,7 +56,7 @@ class Data:
 
     @staticmethod
     def connect():
-        con = sqlite3.connect('data.db')
+        con = sqlite3.connect('data.db', check_same_thread=False)
         con.row_factory = sqlite3.Row
         return con
 
