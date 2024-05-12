@@ -59,7 +59,7 @@ def main_new():
         if hu is not None:
             print('!', end='')
             with open("new_translations.sql", "a") as f:
-                f.write(f"UPDATE translations SET hu='{hu}' WHERE tax_id={tax_id}\n")
+                f.write(f"UPDATE translations SET hu='{hu}' WHERE tax_id={tax_id};\n")
         else:
             print(".", end='')
 
