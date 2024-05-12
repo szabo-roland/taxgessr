@@ -22,17 +22,17 @@
 	<fieldset>
 	  <legend>Preferences:</legend>
 	  <label>
-	    <input type="checkbox" name="hu_only" checked />
+	    <input type="checkbox" id="hu_only" name="hu_only" checked />
 	    Hungarian-only
 	  </label>
 	  <hr/>
 	  <label>
-	    <input type="checkbox" id="random" name="random" />
+	    <input type="checkbox" id="random" name="random" checked />
 	    Random
 	  </label>
 	  <label id="tax_id" style="display:none">
 	    tax_id
-	    <input type="input" name="tax_id"/>
+	    <input type="input" id="tax_id_input" name="tax_id"/>
 	  </label>
 	  <input type="hidden" value="0" name="errors">
 	  <input type="hidden" value="0" name="progress">
@@ -40,13 +40,36 @@
 
 	<input
 	  type="submit"
+	  id="submit_button"
 	  value="New game"
 	  />
       </form>
     </main>
     <script>
       let $random = $("#random");
+      let $hu_only = $("#hu_only");
       let $tax_id = $("#tax_id");
+      let $tax_id_input = $("#tax_id_input");
+
+      function get_fragments()
+      {
+	  let res = {}
+	  if(window.location.hash == "")
+	  {
+	      return res
+	  }
+	  let kv_strings = window.location.hash.substring(1).split("&")
+	  for(const kv_string of kv_strings)
+	  {
+	      let e = kv_string.split("=")
+	      if(e[1] == 'True' || e[1] == 'true') e[1] = true;
+	      if(e[1] == 'False' || e[1] == 'false') e[1] = false;
+
+	      res[e[0]] = e[1]
+	  }
+	  return res;
+
+      }
 
       $random.change(function(){
 	  if(this.checked)
@@ -68,6 +91,37 @@
 
 	  errors_display.html('Errors: ' + error_val);
       }
+      fragments = get_fragments();
+
+      if("tax_id" in fragments)
+      {
+	  $tax_id_input.val(fragments["tax_id"]);
+      }
+
+      if("random" in fragments)
+      {
+	  $random.prop("checked", fragments["random"]);
+      }
+
+      if("hu_only" in fragments)
+      {
+	  $hu_only.prop("checked", fragments["hu_only"]);
+      }
+
+      if($random.prop("checked"))
+      {
+	  $tax_id.hide();
+      }
+      else
+      {
+	  $tax_id.show();
+      }
+
+      if("autostart" in fragments && fragments["autostart"])
+      {
+	  $("#submit_button").click();
+      }
+
     </script>
   </body>
 </html>
